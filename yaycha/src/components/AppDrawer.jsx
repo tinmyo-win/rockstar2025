@@ -55,7 +55,7 @@ export default function AppDrawer() {
                             }}
                         />
                         <Typography sx={{ fontWeight: "bold" }}>
-                            Alice
+                            {auth ? auth.name : "Guest"}
                         </Typography>
                     </Box>
                 </Box>
@@ -73,7 +73,9 @@ export default function AppDrawer() {
                         <>
                             <ListItem>
                                 <ListItemButton
-                                    onClick={() => navigate("/profile/1")}
+                                    onClick={() =>
+                                        navigate(`/profile/${auth.id}`)
+                                    }
                                 >
                                     <ListItemIcon>
                                         <ProfileIcon />
@@ -82,7 +84,13 @@ export default function AppDrawer() {
                                 </ListItemButton>
                             </ListItem>
                             <ListItem>
-                                <ListItemButton onClick={() => setAuth(null)}>
+                                <ListItemButton
+                                    onClick={() => {
+                                        localStorage.removeItem("token");
+                                        setAuth(null);
+                                        navigate("/");
+                                    }}
+                                >
                                     <ListItemIcon>
                                         <LogoutIcon color="error" />
                                     </ListItemIcon>
@@ -104,7 +112,9 @@ export default function AppDrawer() {
                                 </ListItemButton>
                             </ListItem>
                             <ListItem>
-                                <ListItemButton onClick={() => navigate('/login')}>
+                                <ListItemButton
+                                    onClick={() => navigate("/login")}
+                                >
                                     <ListItemIcon>
                                         <LoginIcon />
                                     </ListItemIcon>

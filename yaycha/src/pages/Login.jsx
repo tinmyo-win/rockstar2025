@@ -1,32 +1,64 @@
 import { Alert, Box, Button, TextField, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../ThemedApp";
+import { useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { postLogin } from "../libs/fetcher";
 export default function Login() {
     const navigate = useNavigate();
     const { setAuth } = useApp();
+
+    const usernameInput = useRef();
+    const passwordInput = useRef();
+    const [error, setError] = useState(null);
+
+    const handleSubmit = () => {
+        const username = usernameInput.current.value;
+        const password = passwordInput.current.value;
+        if (!username || !password) {
+            setError("username and password required");
+            return false;
+        }
+        login.mutate({ username, password });
+    };
+
+    const login = useMutation({
+        mutationFn: async ({ username, password }) =>
+            postLogin(username, password),
+        onError: async () => {
+            setError("Incorrect username or password");
+        },
+        onSuccess: async (result) => {
+            setAuth(result.user);
+            localStorage.setItem("token", result.token);
+            navigate("/");
+        },
+    });
+
     return (
         <Box>
             <Typography variant="h3">Login</Typography>
-            <Alert severity="warning" sx={{ mt: 2 }}>
-                All fields required
-            </Alert>
+
+            {error && (
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                    {error}
+                </Alert>
+            )}
+
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
-                    setAuth(true);
-                    navigate("/");
+                    handleSubmit();
                 }}
             >
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 1,
-                        mt: 2,
-                    }}
-                >
-                    <TextField placeholder="Username" fullWidth />
+                <Box>
                     <TextField
+                        inputRef={usernameInput}
+                        placeholder="Username"
+                        fullWidth
+                    />
+                    <TextField
+                        inputRef={passwordInput}
                         type="password"
                         placeholder="Password"
                         fullWidth

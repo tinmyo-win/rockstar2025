@@ -1,27 +1,66 @@
-import { useState } from "react";
-import { Box } from "@mui/material";
+import { Alert, Box } from "@mui/material";
 import Form from "../components/Form";
 import Item from "../components/Item";
 import { useApp } from "../ThemedApp";
+// import { useQuery, useMutation } from "react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "../ThemedApp";
+import { postPost } from "../libs/fetcher";
+
 export default function Home() {
-    const { showForm, setGlobalMsg } = useApp();
-    const [data, setData] = useState([
-        { id: 3, content: "Yay, interesting.", name: "Chris" },
-        { id: 2, content: "React is fun.", name: "Bob" },
-        { id: 1, content: "Hello, World!", name: "Alice" },
-    ]);
-    const remove = (id) => {
-        setData(data.filter((item) => item.id !== id));
-        setGlobalMsg("An item deleted");
-    };
-    const add = (content, name) => {
-        const id = data[0].id + 1;
-        setData([{ id, content, name }, ...data]);
-        setGlobalMsg("An item added");
-    };
+    const { showForm, setGlobalMsg, auth } = useApp();
+
+    const api = import.meta.env.VITE_API;
+
+    const { isLoading, isError, error, data } = useQuery({
+        queryKey: ["posts"],
+        queryFn: async () => {
+            const res = await fetch(`${api}/content/posts`);
+            return res.json();
+        },
+    });
+
+    const remove = useMutation({
+        mutationFn: async (id) => {
+            await fetch(`${api}/content/posts/${id}`, {
+                method: "DELETE",
+            });
+        },
+        onMutate: (id) => {
+            queryClient.setQueriesData(["posts"], (old) =>
+                old.filter((item) => item.id !== id)
+            );
+            setGlobalMsg("A post deleted");
+        },
+    });
+
+    const add = useMutation({
+        mutationFn: (content) => postPost(content),
+        onSuccess: async (newPost) => {
+            await queryClient.cancelQueries("posts");
+            setGlobalMsg("A post added");
+
+            queryClient.setQueryData(["posts"], (oldPosts) => {
+                return [newPost, ...oldPosts]; // Add new post to the beginning
+            });
+        },
+    });
+
+    if (isError) {
+        return (
+            <Box>
+                <Alert severity="warning">{error.message}</Alert>
+            </Box>
+        );
+    }
+
+    if (isLoading) {
+        return <Box sx={{ textAlign: "center" }}>Loading...</Box>;
+    }
+
     return (
         <Box>
-            {showForm && <Form add={add} />}
+            {showForm && auth && <Form add={add.mutate} />}
             {data.map((item) => {
                 return <Item key={item.id} item={item} remove={remove} />;
             })}

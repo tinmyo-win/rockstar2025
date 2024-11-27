@@ -1,4 +1,4 @@
-import { useState, createContext, useContext, useMemo } from "react";
+import { useState, createContext, useContext, useMemo, Suspense, useEffect } from "react";
 import {
     CssBaseline,
     ThemeProvider,
@@ -16,6 +16,10 @@ import Register from "./pages/Register";
 import Comments from "./pages/Comments";
 import Profile from "./pages/Profile";
 import Likes from "./pages/Likes";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { fetchVerify } from "./libs/fetcher";
+
 const AppContext = createContext();
 export function useApp() {
     return useContext(AppContext);
@@ -54,12 +58,20 @@ const router = createBrowserRouter([
     },
 ]);
 
+export const queryClient = new QueryClient();
+
 export default function ThemedApp() {
     const [showDrawer, setShowDrawer] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [globalMsg, setGlobalMsg] = useState(null);
     const [auth, setAuth] = useState(null);
     const [mode, setMode] = useState("dark");
+
+    useEffect(() => {
+        fetchVerify().then((user) => {
+            if (user) setAuth(user);
+        });
+    }, []);
 
     const theme = useMemo(() => {
         return createTheme({
@@ -89,7 +101,12 @@ export default function ThemedApp() {
                     setMode,
                 }}
             >
-                <RouterProvider router={router} />
+                <QueryClientProvider client={queryClient}>
+                    <RouterProvider router={router} />
+                    {/* <Suspense fallback={null}> */}
+                    <ReactQueryDevtools initialIsOpen={false} />i
+                    {/* </Suspense> */}
+                </QueryClientProvider>
                 <CssBaseline />
             </AppContext.Provider>
         </ThemeProvider>
