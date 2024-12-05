@@ -1,12 +1,19 @@
-import { useState, createContext, useContext, useMemo, Suspense, useEffect } from "react";
+import {
+    useState,
+    createContext,
+    useContext,
+    useMemo,
+    // Suspense,
+    useEffect,
+} from "react";
 import {
     CssBaseline,
     ThemeProvider,
     createTheme,
-    Snackbar,
+    // Snackbar,
 } from "@mui/material";
-import App from "./App";
-import AppDrawer from "./components/AppDrawer";
+// import App from "./App";
+// import AppDrawer from "./components/AppDrawer";
 import { deepPurple, grey } from "@mui/material/colors";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import Template from "./Template";
@@ -19,6 +26,9 @@ import Likes from "./pages/Likes";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fetchVerify } from "./libs/fetcher";
+import Search from "./pages/Search";
+import Notis from "./pages/Notis";
+import AppSocket from "./AppSocket";
 
 const AppContext = createContext();
 export function useApp() {
@@ -51,8 +61,16 @@ const router = createBrowserRouter([
                 element: <Profile />,
             },
             {
-                path: "/likes/:id",
+                path: "/likes/:id/:type",
                 element: <Likes />,
+            },
+            {
+                path: "/search",
+                element: <Search />,
+            },
+            {
+                path: "/notis",
+                element: <Notis />,
             },
         ],
     },
@@ -103,6 +121,7 @@ export default function ThemedApp() {
             >
                 <QueryClientProvider client={queryClient}>
                     <RouterProvider router={router} />
+                    <AppSocket />
                     {/* <Suspense fallback={null}> */}
                     <ReactQueryDevtools initialIsOpen={false} />i
                     {/* </Suspense> */}
